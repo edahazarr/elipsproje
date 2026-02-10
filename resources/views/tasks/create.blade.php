@@ -1,0 +1,94 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="h4 mb-0">
+            Yeni Görev — {{ $project->name }}
+        </h2>
+    </x-slot>
+
+    <div class="py-4">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-6">
+
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+
+                            <form method="POST" action="{{ route('projects.tasks.store', $project) }}">
+                                @csrf
+
+                                <div class="mb-3">
+                                    <label class="form-label">Başlık</label>
+                                    <input
+                                        name="title"
+                                        value="{{ old('title') }}"
+                                        class="form-control @error('title') is-invalid @enderror"
+                                        required
+                                    >
+                                    @error('title')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Açıklama</label>
+                                    <textarea
+                                        name="description"
+                                        class="form-control @error('description') is-invalid @enderror"
+                                        rows="4"
+                                    >{{ old('description') }}</textarea>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                {{-- Status zorunlu: default todo gönderelim --}}
+                                <input type="hidden" name="status" value="todo">
+
+                                <div class="mb-3">
+                                    <label class="form-label">Atanan Kişi</label>
+                                    <select
+                                        name="assigned_user_id"
+                                        class="form-select @error('assigned_user_id') is-invalid @enderror"
+                                    >
+                                        <option value="">Seçme</option>
+                                        @foreach($users as $u)
+                                            <option value="{{ $u->id }}" @selected(old('assigned_user_id') == $u->id)>
+                                                {{ $u->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('assigned_user_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label">Son Tarih</label>
+                                    <input
+                                        type="date"
+                                        name="due_date"
+                                        value="{{ old('due_date') }}"
+                                        class="form-control @error('due_date') is-invalid @enderror"
+                                    >
+                                    @error('due_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Kaydet</button>
+
+                                    <a href="{{ route('projects.show', $project) }}" class="btn btn-secondary">
+                                        Geri
+                                    </a>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
