@@ -39,6 +39,21 @@
                                                 Düzenle
                                             </a>
                                         </div>
+                                         <div class="mt-2 d-flex gap-2">
+        @if($task->priority === 'high')
+            <span class="badge bg-danger">High</span>
+        @elseif($task->priority === 'medium')
+            <span class="badge bg-warning text-dark">Medium</span>
+        @else
+            <span class="badge bg-secondary">Low</span>
+        @endif
+
+        @if($task->tag)
+            <span class="badge bg-info text-dark">
+                {{ ucfirst($task->tag) }}
+            </span>
+        @endif
+    </div>
 
                                         @if($task->description)
                                             <div class="text-muted small mt-2">{{ $task->description }}</div>
@@ -48,9 +63,12 @@
                                             <div class="text-muted small mt-2">📅 {{ $task->due_date }}</div>
                                         @endif
 
-                                        @if($task->assignee)
-                                            <div class="text-muted small mt-2">👤 {{ $task->assignee->name }}</div>
-                                        @endif
+                                        @if($task->assignees && $task->assignees->count())
+    <div class="text-muted small mt-2">
+        👥 {{ $task->assignees->pluck('name')->join(', ') }}
+    </div>
+@endif
+
 
                                         <div class="d-flex gap-2 mt-3">
                                             <form method="POST" action="{{ route('projects.tasks.move', [$project, $task]) }}">
@@ -99,10 +117,28 @@
                                                 Düzenle
                                             </a>
                                         </div>
+                                         <div class="mt-2 d-flex gap-2">
+        @if($task->priority === 'high')
+            <span class="badge bg-danger">High</span>
+        @elseif($task->priority === 'medium')
+            <span class="badge bg-warning text-dark">Medium</span>
+        @else
+            <span class="badge bg-secondary">Low</span>
+        @endif
 
-                                        @if($task->assignee)
-                                            <div class="text-muted small mt-2">👤 {{ $task->assignee->name }}</div>
-                                        @endif
+        @if($task->tag)
+            <span class="badge bg-info text-dark">
+                {{ ucfirst($task->tag) }}
+            </span>
+        @endif
+    </div>
+
+                                        @if($task->assignees && $task->assignees->count())
+    <div class="text-muted small mt-2">
+        👥 {{ $task->assignees->pluck('name')->join(', ') }}
+    </div>
+@endif
+
 
                                         <div class="d-flex gap-2 mt-3">
                                             <form method="POST" action="{{ route('projects.tasks.move', [$project, $task]) }}">
@@ -141,7 +177,23 @@
                                             <a class="small" href="{{ route('projects.tasks.edit', [$project, $task]) }}">
                                                 Düzenle
                                             </a>
+
                                         </div>
+                                         <div class="mt-2 d-flex gap-2">
+        @if($task->priority === 'high')
+            <span class="badge bg-danger">High</span>
+        @elseif($task->priority === 'medium')
+            <span class="badge bg-warning text-dark">Medium</span>
+        @else
+            <span class="badge bg-secondary">Low</span>
+        @endif
+
+        @if($task->tag)
+            <span class="badge bg-info text-dark">
+                {{ ucfirst($task->tag) }}
+            </span>
+        @endif
+    </div>
                                         @if($task->assignees && $task->assignees->count())
     @php
         $names = $task->assignees->pluck('name');

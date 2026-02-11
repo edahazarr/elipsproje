@@ -37,15 +37,20 @@ class TaskController extends Controller
     public function store(Request $request, Project $project)
     {
         $data = $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
-            'description'  => ['nullable', 'string'],
-            'status'       => ['required', 'in:todo,doing,done'],
-            'due_date'     => ['nullable', 'date'],
+    'title'        => ['required', 'string', 'max:255'],
+    'description'  => ['nullable', 'string'],
+    'status'       => ['required', 'in:todo,doing,done'],
+    'due_date'     => ['nullable', 'date'],
 
-            // ✅ çoklu atama
-            'user_ids'     => ['nullable', 'array'],
-            'user_ids.*'   => ['integer', 'exists:users,id'],
-        ]);
+    // YENİ ALANLAR
+    'priority'     => ['required', 'in:low,medium,high'],
+    'tag'          => ['nullable', 'in:bug,feature,urgent'],
+
+    // çoklu atama
+    'user_ids'     => ['nullable', 'array'],
+    'user_ids.*'   => ['integer', 'exists:users,id'],
+]);
+
 
         // Seçilen kullanıcılar
         $userIds = collect($request->input('user_ids', []))
@@ -65,16 +70,19 @@ class TaskController extends Controller
         }
 
         // Task oluştur
-        $task = Task::create([
-            'project_id'   => $project->id,
-            'title'        => $data['title'],
-            'description'  => $data['description'] ?? null,
-            'status'       => $data['status'],
-            'due_date'     => $data['due_date'] ?? null,
-            'is_active'    => true,
-            // varsa:
-            // 'created_by_user_id' => auth()->id(),
-        ]);
+       $task = Task::create([
+    'project_id'   => $project->id,
+    'title'        => $data['title'],
+    'description'  => $data['description'] ?? null,
+    'status'       => $data['status'],
+    'due_date'     => $data['due_date'] ?? null,
+
+    'priority'     => $data['priority'],        // ✅ ekle
+    'tag'          => $data['tag'] ?? null,     // ✅ ekle
+
+    'is_active'    => true,
+]);
+
 
         // Pivot atama (basit)
         $task->assignees()->sync($userIds->all());
@@ -109,6 +117,9 @@ $users = $project->users()
             // ✅ çoklu atama
             'user_ids'     => ['nullable', 'array'],
             'user_ids.*'   => ['integer', 'exists:users,id'],
+            'priority'     => ['required', 'in:low,medium,high'],
+'tag'          => ['nullable', 'in:bug,feature,urgent'],
+
         ]);
 
         $userIds = collect($request->input('user_ids', []))
@@ -130,6 +141,8 @@ $users = $project->users()
             'description' => $data['description'] ?? null,
             'status' => $data['status'],
             'due_date' => $data['due_date'] ?? null,
+            'priority' => $data['priority'],
+    'tag' => $data['tag'] ?? null,  
         ]);
 
         // Pivot güncelle

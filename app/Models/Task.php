@@ -15,6 +15,9 @@ class Task extends Model
     'assigned_user_id',
     'due_date',
     'is_active',
+    'priority',
+'tag',
+
 ];
 
 
