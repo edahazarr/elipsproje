@@ -5,17 +5,42 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
-    public function index()
-    {
-        $projects = Project::with('company')
-            ->orderByDesc('id')
-            ->get();
+    public function index(Request $request)
+{
+    $user = Auth::user();
 
-        return view('projects.index', compact('projects'));
+
+    $q = trim((string) $request->query('q', ''));
+    $status = $request->query('status', 'all'); // all | active | passive
+
+    $query = Project::query()
+        ->where('company_id', $user->company_id)
+        ->with('company')
+        ->orderByDesc('id');
+
+    if ($q !== '') {
+        $query->where('name', 'like', "%{$q}%");
     }
+
+    if ($status === 'active') {
+        $query->where('is_active', true);
+    } elseif ($status === 'passive') {
+        $query->where('is_active', false);
+    }
+
+    // Filtrelenmiş toplam sayı
+    $totalCount = (clone $query)->count();
+
+    // Sayfalama
+    $projects = $query->paginate(10)->withQueryString();
+
+    return view('projects.index', compact('projects', 'totalCount', 'q', 'status'));
+}
+
 
     public function create()
     {
@@ -31,7 +56,8 @@ class ProjectController extends Controller
             'end_date' => ['nullable', 'date'],
         ]);
 
-        $data['company_id'] = auth()->user()->company_id;
+        $data['company_id'] = Auth::user()->company_id;
+
         $data['is_active'] = true;
 
         Project::create($data);

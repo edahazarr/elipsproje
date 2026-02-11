@@ -1,16 +1,43 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="h4 mb-0">Projeler</h2>
-    </x-slot>
+    <div class="py-2">
+        <h2 class="h4 fw-semibold mb-2">Projeler</h2>
+    </div>
+</x-slot>
 
-    <div class="py-4">
-        <div class="container">
+   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <div class="h5 fw-semibold text-muted mb-0">
+    Toplam: {{ $totalCount }} Proje
+</div>
 
-            <div class="d-flex justify-content-end mb-3">
-                <a href="{{ route('projects.create') }}" class="btn btn-primary">
-                    + Yeni Proje
-                </a>
-            </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    
+    <form method="GET" action="{{ route('projects.index') }}" class="d-flex flex-wrap gap-2 mt-2">
+        <input
+            type="text"
+            name="q"
+            value="{{ $q ?? '' }}"
+            class="form-control"
+            style="max-width: 240px;"
+            placeholder="Proje adı ara...">
+
+        <select name="status" class="form-select" style="max-width: 180px;">
+            <option value="all" @selected(($status ?? 'all') === 'all')>Tümü</option>
+            <option value="active" @selected(($status ?? 'all') === 'active')>Aktif</option>
+            <option value="passive" @selected(($status ?? 'all') === 'passive')>Pasif</option>
+        </select>
+
+        <button class="btn btn-outline-primary" type="submit">Filtrele</button>
+        <a class="btn btn-outline-secondary" href="{{ route('projects.index') }}">Temizle</a>
+    </form>
+
+    <a href="{{ route('projects.create') }}" class="btn btn-primary mt-2">
+        + Yeni Proje
+    </a>
+</div>
+</div>
+
 
             @if(session('success'))
                 <div class="alert alert-success">
@@ -78,6 +105,9 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        <div class="mt-3">
+    {{ $projects->links() }}
+</div>
                     </div>
 
                 </div>

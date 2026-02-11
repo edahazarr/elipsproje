@@ -1,50 +1,72 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200">
-            Yeni Proje
-        </h2>
+        <h2 class="h4 mb-0">Yeni Proje</h2>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow sm:rounded-lg p-6">
+    <div class="py-4">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-6">
 
-                <form method="POST" action="{{ route('projects.store') }}">
-                    @csrf
+                    <div class="card shadow-sm">
+                        <div class="card-body">
 
-                    <div>
-                        <label>Ad</label>
-                        <input name="name" style="width:100%;border:1px solid #ccc;padding:8px;">
+                            <form method="POST" action="{{ route('projects.store') }}">
+                                @csrf
+
+                                <div class="mb-3">
+                                    <label class="form-label">Ad</label>
+                                    <input name="name"
+                                           value="{{ old('name') }}"
+                                           class="form-control @error('name') is-invalid @enderror"
+                                           required>
+                                    @error('name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Açıklama</label>
+                                    <textarea name="description"
+                                              class="form-control @error('description') is-invalid @enderror"
+                                              rows="4">{{ old('description') }}</textarea>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Başlangıç Tarihi</label>
+                                    <input type="date"
+                                           name="start_date"
+                                           value="{{ old('start_date') }}"
+                                           class="form-control @error('start_date') is-invalid @enderror">
+                                    @error('start_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label">Bitiş Tarihi</label>
+                                    <input type="date"
+                                           name="end_date"
+                                           value="{{ old('end_date') }}"
+                                           class="form-control @error('end_date') is-invalid @enderror">
+                                    @error('end_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                                    <a href="{{ route('projects.index') }}" class="btn btn-secondary">Geri</a>
+                                </div>
+                            </form>
+
+                        </div>
                     </div>
 
-                    <div style="margin-top:15px;">
-                        <label>Açıklama</label>
-                        <textarea name="description" style="width:100%;border:1px solid #ccc;padding:8px;"></textarea>
-                    </div>
-
-                    <div style="margin-top:15px;">
-                        <label>Başlangıç Tarihi</label>
-                        <input type="date" name="start_date" style="width:100%;border:1px solid #ccc;padding:8px;">
-                    </div>
-
-                    <div style="margin-top:15px;">
-                        <label>Bitiş Tarihi</label>
-                        <input type="date" name="end_date" style="width:100%;border:1px solid #ccc;padding:8px;">
-                    </div>
-
-                    <div style="margin-top:20px;">
-                        <button type="submit"
-                            style="background:#2563eb;color:white;padding:10px 20px;border:none;border-radius:6px;">
-                            Kaydet
-                        </button>
-
-                        <a href="{{ route('projects.index') }}"
-                           style="margin-left:10px;">
-                            Geri
-                        </a>
-                    </div>
-                </form>
-
+                </div>
             </div>
         </div>
     </div>

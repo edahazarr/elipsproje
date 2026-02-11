@@ -79,7 +79,7 @@
                                 @csrf
 
                                 <div class="col">
-                                    <label class="form-label " style="color:white;">Kullanıcı seç</label>
+                                    <label class="form-label">Kullanıcı seç</label>
                                     <select name="user_id"
                                             class="form-select"
                                             required>
