@@ -43,24 +43,36 @@
 
                                 {{-- Status zorunlu: default todo gönderelim --}}
                                 <input type="hidden" name="status" value="todo">
-
                                 <div class="mb-3">
-                                    <label class="form-label">Atanan Kişi</label>
-                                    <select
-                                        name="assigned_user_id"
-                                        class="form-select @error('assigned_user_id') is-invalid @enderror"
-                                    >
-                                        <option value="">Seçme</option>
-                                        @foreach($users as $u)
-                                            <option value="{{ $u->id }}" @selected(old('assigned_user_id') == $u->id)>
-                                                {{ $u->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('assigned_user_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+    <label class="form-label">Atanan Kişiler</label>
+
+    @php
+        $selectedUserIds = old('user_ids', []);
+    @endphp
+
+    <select
+        name="user_ids[]"
+        class="form-select @error('user_ids') is-invalid @enderror"
+        multiple
+        size="6"
+    >
+        @foreach($users as $u)
+            <option value="{{ $u->id }}" @selected(in_array($u->id, $selectedUserIds))>
+                {{ $u->name }}
+            </option>
+        @endforeach
+    </select>
+
+    <div class="form-text">Ctrl/⌘ ile çoklu seçim yapabilirsin.</div>
+
+    @error('user_ids')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
+    @error('user_ids.*')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+    @enderror
+</div>
+
 
                                 <div class="mb-4">
                                     <label class="form-label">Son Tarih</label>

@@ -29,8 +29,9 @@ class Project extends Model
 }
 public function users()
 {
-    return $this->belongsToMany(\App\Models\User::class)->withTimestamps();
+    return $this->belongsToMany(User::class)->withTimestamps();
 }
+
 
 
 }

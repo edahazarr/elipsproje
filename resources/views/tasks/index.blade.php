@@ -142,10 +142,19 @@
                                                 Düzenle
                                             </a>
                                         </div>
+                                        @if($task->assignees && $task->assignees->count())
+    @php
+        $names = $task->assignees->pluck('name');
+        $firstTwo = $names->take(2)->join(', ');
+        $remaining = $names->count() - 2;
+    @endphp
 
-                                        @if($task->assignee)
-                                            <div class="text-muted small mt-2">👤 {{ $task->assignee->name }}</div>
-                                        @endif
+    <div class="text-muted small mt-2">
+        👥 {{ $firstTwo }}@if($remaining > 0) <span class="text-muted"> +{{ $remaining }}</span>@endif
+    </div>
+@endif
+
+
                                     </div>
                                 </div>
                             @empty
