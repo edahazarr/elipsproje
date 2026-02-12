@@ -7,6 +7,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\TaskCommentController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -45,6 +46,20 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/projects/{project}/tasks/{task}', [TaskController::class, 'update'])->name('projects.tasks.update');
 
     Route::patch('/projects/{project}/tasks/{task}/move', [TaskController::class, 'move'])->name('projects.tasks.move');
+    Route::delete('/projects/{project}/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'destroy'])
+    ->name('projects.tasks.destroy');
+    //Task comment 
+    Route::middleware(['auth'])->group(function () {
+
+    Route::post('/projects/{project}/tasks/{task}/comments', [TaskCommentController::class, 'store'])
+        ->name('projects.tasks.comments.store');
+
+    Route::patch('/projects/{project}/tasks/{task}/comments/{comment}', [TaskCommentController::class, 'update'])
+        ->name('projects.tasks.comments.update');
+
+        Route::delete('/projects/{project}/tasks/{task}/comments/{comment}',
+    [TaskCommentController::class, 'destroy']
+)->name('projects.tasks.comments.destroy');
 
     // Admin alanı (Users/Companies)
     Route::middleware(['role:Admin'])->group(function () {
@@ -61,5 +76,5 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/companies/{company}/toggle', [CompanyController::class, 'toggle'])->name('companies.toggle');
     });
 });
-
+});
 require __DIR__.'/auth.php';

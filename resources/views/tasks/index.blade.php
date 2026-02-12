@@ -38,6 +38,15 @@
                                             <a class="small" href="{{ route('projects.tasks.edit', [$project, $task]) }}">
                                                 Düzenle
                                             </a>
+                                            <form method="POST"
+              action="{{ route('projects.tasks.destroy', [$project, $task]) }}"
+              onsubmit="return confirm('Bu görevi silmek istiyor musun?');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+                Sil
+            </button>
+        </form>
                                         </div>
                                          <div class="mt-2 d-flex gap-2">
         @if($task->priority === 'high')

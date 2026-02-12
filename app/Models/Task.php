@@ -36,6 +36,14 @@ public function assignees()
         ->withPivot(['assigned_by_user_id', 'can_assign', 'assigned_at'])
         ->withTimestamps();
 }
+public function comments()
+{
+    return $this->hasMany(\App\Models\TaskComment::class)->latest();
+}
+public function activities()
+{
+    return $this->morphMany(\App\Models\Activity::class, 'subject')->latest();
+}
 
 
 }

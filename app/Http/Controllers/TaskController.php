@@ -4,16 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
+use App\Models\Activity; 
 class TaskController extends Controller
 {
     public function index(Project $project)
     {
         $tasks = $project->tasks()
-            ->with('assignees') // ✅ çoklu
+            ->with('assignees')
             ->orderByDesc('id')
             ->get();
 
@@ -27,9 +25,8 @@ class TaskController extends Controller
     public function create(Project $project)
     {
         $users = $project->users()
-    ->orderBy('name')
-    ->get();
-
+            ->orderBy('name')
+            ->get();
 
         return view('tasks.create', compact('project', 'users'));
     }
@@ -37,31 +34,25 @@ class TaskController extends Controller
     public function store(Request $request, Project $project)
     {
         $data = $request->validate([
-    'title'        => ['required', 'string', 'max:255'],
-    'description'  => ['nullable', 'string'],
-    'status'       => ['required', 'in:todo,doing,done'],
-    'due_date'     => ['nullable', 'date'],
+            'title'        => ['required', 'string', 'max:255'],
+            'description'  => ['nullable', 'string'],
+            'status'       => ['required', 'in:todo,doing,done'],
+            'due_date'     => ['nullable', 'date'],
 
-    // YENİ ALANLAR
-    'priority'     => ['required', 'in:low,medium,high'],
-    'tag'          => ['nullable', 'in:bug,feature,urgent'],
+            'priority'     => ['required', 'in:low,medium,high'],
+            'tag'          => ['nullable', 'in:bug,feature,urgent'],
 
-    // çoklu atama
-    'user_ids'     => ['nullable', 'array'],
-    'user_ids.*'   => ['integer', 'exists:users,id'],
-]);
+            'user_ids'     => ['nullable', 'array'],
+            'user_ids.*'   => ['integer', 'exists:users,id'],
+        ]);
 
-
-        // Seçilen kullanıcılar
         $userIds = collect($request->input('user_ids', []))
             ->filter()
             ->unique()
             ->values();
 
-        // Proje üyeleri
         $projectUserIds = $project->users()->pluck('users.id');
 
-        // Proje üyesi olmayan seçildiyse engelle
         $invalidUserIds = $userIds->diff($projectUserIds);
         if ($invalidUserIds->isNotEmpty()) {
             return back()->withErrors([
@@ -69,23 +60,26 @@ class TaskController extends Controller
             ])->withInput();
         }
 
-        // Task oluştur
-       $task = Task::create([
-    'project_id'   => $project->id,
-    'title'        => $data['title'],
-    'description'  => $data['description'] ?? null,
-    'status'       => $data['status'],
-    'due_date'     => $data['due_date'] ?? null,
+        $task = Task::create([
+            'project_id'   => $project->id,
+            'title'        => $data['title'],
+            'description'  => $data['description'] ?? null,
+            'status'       => $data['status'],
+            'due_date'     => $data['due_date'] ?? null,
+            'priority'     => $data['priority'],
+            'tag'          => $data['tag'] ?? null,
+            'is_active'    => true,
+        ]);
 
-    'priority'     => $data['priority'],        // ✅ ekle
-    'tag'          => $data['tag'] ?? null,     // ✅ ekle
-
-    'is_active'    => true,
-]);
-
-
-        // Pivot atama (basit)
         $task->assignees()->sync($userIds->all());
+
+        // ✅ ACTIVITY LOG
+        log_activity('task_created', $task, [
+            'title' => $task->title,
+            'priority' => $task->priority,
+            'tag' => $task->tag,
+            'assignees' => $userIds->all(),
+        ]);
 
         return redirect()
             ->route('projects.tasks.index', $project)
@@ -96,12 +90,17 @@ class TaskController extends Controller
 {
     abort_unless($task->project_id === $project->id, 404);
 
-    $task->load('assignees');
-$users = $project->users()
-    ->orderBy('name')
-    ->get();
+    $task->load(['assignees', 'comments.user']);
 
-    return view('tasks.edit', compact('project', 'task', 'users'));
+    $users = $project->users()->orderBy('name')->get();
+
+    $activities = Activity::with('user')
+        ->where('subject_type', Task::class)
+        ->where('subject_id', $task->id)
+        ->latest()
+        ->get();
+
+    return view('tasks.edit', compact('project', 'task', 'users', 'activities'));
 }
 
     public function update(Request $request, Project $project, Task $task)
@@ -114,12 +113,11 @@ $users = $project->users()
             'status'       => ['required', 'in:todo,doing,done'],
             'due_date'     => ['nullable', 'date'],
 
-            // ✅ çoklu atama
             'user_ids'     => ['nullable', 'array'],
             'user_ids.*'   => ['integer', 'exists:users,id'],
-            'priority'     => ['required', 'in:low,medium,high'],
-'tag'          => ['nullable', 'in:bug,feature,urgent'],
 
+            'priority'     => ['required', 'in:low,medium,high'],
+            'tag'          => ['nullable', 'in:bug,feature,urgent'],
         ]);
 
         $userIds = collect($request->input('user_ids', []))
@@ -142,11 +140,18 @@ $users = $project->users()
             'status' => $data['status'],
             'due_date' => $data['due_date'] ?? null,
             'priority' => $data['priority'],
-    'tag' => $data['tag'] ?? null,  
+            'tag' => $data['tag'] ?? null,
         ]);
 
-        // Pivot güncelle
         $task->assignees()->sync($userIds->all());
+
+        // ✅ ACTIVITY LOG
+        log_activity('task_updated', $task, [
+            'title' => $task->title,
+            'priority' => $task->priority,
+            'tag' => $task->tag,
+            'assignees' => $userIds->all(),
+        ]);
 
         return redirect()
             ->route('projects.tasks.index', $project)
@@ -159,20 +164,49 @@ $users = $project->users()
 
         $task->update(['is_active' => !$task->is_active]);
 
+        // ✅ ACTIVITY LOG
+        log_activity('task_toggled', $task, [
+            'is_active' => $task->is_active,
+        ]);
+
         return back()->with('success', 'Görev durumu güncellendi.');
     }
+
     public function move(Request $request, Project $project, Task $task)
-{
-    abort_unless($task->project_id === $project->id, 404);
+    {
+        abort_unless($task->project_id === $project->id, 404);
 
-    $data = $request->validate([
-        'status' => ['required', 'in:todo,doing,done'],
-    ]);
+        $data = $request->validate([
+            'status' => ['required', 'in:todo,doing,done'],
+        ]);
 
-    $task->update(['status' => $data['status']]);
+        $task->update(['status' => $data['status']]);
 
-    return back()->with('success', 'Görev durumu güncellendi.');
+        // ✅ ACTIVITY LOG
+        log_activity('task_moved', $task, [
+            'status' => $data['status'],
+        ]);
+
+        return back()->with('success', 'Görev durumu güncellendi.');
+    }
+
+    public function destroy(Project $project, Task $task)
+    {
+        abort_unless($task->project_id === $project->id, 404);
+
+        // yorumlar FK bağlıysa önce sil
+        $task->comments()->delete();
+
+        // çoklu atamalar
+        $task->assignees()->detach();
+
+        // ✅ ACTIVITY LOG (silmeden önce)
+        log_activity('task_deleted', $task, [
+            'title' => $task->title,
+        ]);
+
+        $task->delete();
+
+        return back()->with('success', 'Görev silindi.');
+    }
 }
-
-}
-

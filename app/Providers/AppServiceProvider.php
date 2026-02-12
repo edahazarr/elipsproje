@@ -17,6 +17,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
 {
     Paginator::useBootstrapFive();
+
+    require_once app_path('Support/activity.php');
 }
 
 }
